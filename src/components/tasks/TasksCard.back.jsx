@@ -1,11 +1,12 @@
 import React from 'react';
+
 import axios from 'axios';
+
 import Card from '../card/Card';
 import Button from '../button/Button';
+
 import TasksItem from './TasksItem';
-import './tasks-card.scss';
-
-
+import './tasks-item.scss';
 
 class TasksCard extends React.Component {
   constructor(props) {

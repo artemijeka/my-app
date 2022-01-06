@@ -1,6 +1,6 @@
 import React from 'react';
+
 import Button from '../button/Button';
-import './tasks-item.scss'
 
 class TasksItem extends React.Component {
   constructor(props) {

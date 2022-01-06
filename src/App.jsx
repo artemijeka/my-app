@@ -1,8 +1,8 @@
 import React from 'react';
-import Pomodoro from './pomodoro/Pomodoro';
-import './App.scss';
 
-import Tasks from './tasks/Tasks';
+import Pomodoro from './components/pomodoro/Pomodoro';
+import Tasks from './components/tasks/Tasks';
+
 import {
   BrowserRouter,
   Routes,
@@ -11,7 +11,6 @@ import {
 } from "react-router-dom";
 
 function App(props) {
-  console.log(props.store);
   return (
     <BrowserRouter>
       <React.StrictMode>
@@ -21,12 +20,10 @@ function App(props) {
           <NavLink to='/pomodoro' className={`navigation__link`}>Pomodoro</NavLink>
         </nav>
         <Routes>
-          <Route path='/tasks' element={<Tasks />} />
-          <Route path='/pomodoro' element={<Pomodoro />} />
-          <Route path='/' element={<><Tasks /><Pomodoro /></>} />
+          <Route path='/tasks' element={<Tasks state={props.store.state.tasksCard} />} />
+          <Route path='/pomodoro' element={<Pomodoro store={props.store} />} />
+          <Route path='/' element={<><Tasks state={props.store.state.tasksCard} /><Pomodoro store={props.store} /></>} />
         </Routes>
-        {/*<Tasks />*/}
-        {/*<Pomodoro />*/}
       </React.StrictMode>
     </BrowserRouter>
   );

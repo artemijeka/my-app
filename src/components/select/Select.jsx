@@ -1,6 +1,6 @@
 import './select.scss';
 
-export default function Select(props) {
+function Select(props) {
   return (
     <select
       id={props.id}
@@ -11,3 +11,5 @@ export default function Select(props) {
     </select>
   );
 }
+
+export default Select;

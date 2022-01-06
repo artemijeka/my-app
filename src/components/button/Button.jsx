@@ -1,6 +1,6 @@
 import './button.scss';
 
-export default function Button(props) {
+function Button(props) {
   return (
     <button
       className={`button ${props.className}`}
@@ -11,3 +11,5 @@ export default function Button(props) {
     </button>
   );
 }
+
+export default Button;

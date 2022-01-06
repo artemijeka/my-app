@@ -9,22 +9,22 @@ TODO
 
 
 Димыч React путь самурая
-  https://www.youtube.com/watch?v=cbnExb3GSFM&list=PLcvhF2Wqh7DNVy1OCUpG3i5lyxyBWhGZ8&index=44
+  https://www.youtube.com/watch?v=-mDs48HB3II&list=PLcvhF2Wqh7DNVy1OCUpG3i5lyxyBWhGZ8
 
-Остановился тут:
+Docs остановился тут:
+  react js: 
+    https://ru.reactjs.org/docs/accessibility.html
+
   react-router-dom
     https://github.com/remix-run/react-router/blob/main/docs/getting-started/installation.md
 
   js indexedDB: 
     https://learn.javascript.ru/indexeddb
 
-  кроме axios 
+  axios 
     https://www.npmjs.com/package/axios#installing
-  может понадобится fetch
+  может понадобится fetch 
     https://learn.javascript.ru/fetch
-
-  react js: 
-    https://ru.reactjs.org/docs/forwarding-refs.html
 
   пропустил пока что:
     https://ru.reactjs.org/docs/context.html
