@@ -120,57 +120,59 @@ const store = {
       serverURL: 'https://web.master-artem.ru/api/my-app/server.php',
       addTask: (tasksCard) => {
         console.log('adding task...');
-        tasksCard.transaction = tasksCard.idb.transaction('tasks-card', 'readwrite');
+        if (tasksCard.idb) {
+          tasksCard.transaction = tasksCard.idb.transaction('tasks-card', 'readwrite');
 
-        let tasksCardTransaction = tasksCard.transaction.objectStore("tasks-card");
+          let tasksCardTransaction = tasksCard.transaction.objectStore("tasks-card");
 
-        let newTask = {
-          key: tasksCard.state.maxTasksKey + 1,
-          content: '',
-          created: new Date(),
-        };
-        console.log(newTask.key);
-        console.log(tasksCard.state.maxTasksKey);
+          let newTask = {
+            key: tasksCard.state.maxTasksKey + 1,
+            content: '',
+            created: new Date(),
+          };
+          console.log(newTask.key);
+          console.log(tasksCard.state.maxTasksKey);
 
-        let request = tasksCardTransaction.add(newTask);//, task.id
+          let request = tasksCardTransaction.add(newTask);//, task.id
 
-        tasksCard.transaction.oncomplete = function () {
-          console.log("Транзакция добавления задачи выполнена");
-        };
+          tasksCard.transaction.oncomplete = function () {
+            console.log("Транзакция добавления задачи выполнена");
+          };
 
-        let newTaskJSX = (
-          <TasksItem
-            content={newTask.content}
-            data-created={newTask.created}
-            data-key={newTask.key}
-            id={`i-${newTask.key}`}
-            className='tasks-list__tasks-item'
-            key={newTask.key}
-            tasksItemSave={tasksCard.tasksItemSave}
-            tasksItemDelete={tasksCard.tasksItemDelete} />
-        );
+          let newTaskJSX = (
+            <TasksItem
+              content={newTask.content}
+              data-created={newTask.created}
+              data-key={newTask.key}
+              id={`i-${newTask.key}`}
+              className='tasks-list__tasks-item'
+              key={newTask.key}
+              tasksItemSave={tasksCard.tasksItemSave}
+              tasksItemDelete={tasksCard.tasksItemDelete} />
+          );
 
-        request.onsuccess = function () {
-          console.log("Задача добавлена в хранилище объектов (idb): ", request.result);
+          request.onsuccess = function () {
+            console.log("Задача добавлена в хранилище объектов (idb): ", request.result);
 
-          tasksCard.setState((state, props) => ({
-            tasksList: state.tasksList.concat(newTaskJSX),
-            maxTasksKey: state.maxTasksKey + 1
-          }));
-        }.bind(tasksCard);
+            tasksCard.setState((state, props) => ({
+              tasksList: state.tasksList.concat(newTaskJSX),
+              maxTasksKey: state.maxTasksKey + 1
+            }));
+          }.bind(tasksCard);
 
-        request.onerror = function (event) {
-          console.log("Ошибка: ", request.error);
-          // ConstraintError возникает при попытке добавить объект с ключом, который уже существует
-          if (request.error.name === "ConstraintError") {
-            console.log("Задача с таким id в idb уже существует!");//обрабатываем ошибку
-            event.preventDefault(); // предотвращаем отмену транзакции
-            event.stopPropagation(); // предотвращаем всплытие ошибки
-            // ...можно попробовать использовать другой ключ...
-          } else {
-            // ничего не делаем // транзакция будет отменена // мы можем обработать ошибку в transaction.onabort
-          }
-        };
+          request.onerror = function (event) {
+            console.log("Ошибка: ", request.error);
+            // ConstraintError возникает при попытке добавить объект с ключом, который уже существует
+            if (request.error.name === "ConstraintError") {
+              console.log("Задача с таким id в idb уже существует!");//обрабатываем ошибку
+              event.preventDefault(); // предотвращаем отмену транзакции
+              event.stopPropagation(); // предотвращаем всплытие ошибки
+              // ...можно попробовать использовать другой ключ...
+            } else {
+              // ничего не делаем // транзакция будет отменена // мы можем обработать ошибку в transaction.onabort
+            }
+          };
+        }
 
         // Чтобы вручную отменить транзакцию, выполните:
         // tasksCard.transaction.onabort = function() {
@@ -239,143 +241,145 @@ const store = {
           console.log("Ошибка удаления задачи в idb: ", request.error);
         };
       },/* tasksItemDelete() */
-      uploadTasksToServer: () => {
+      uploadTasksToServer: (tasksCard) => {
+        if (tasksCard.idb) {
+          tasksCard.transaction = tasksCard.idb.transaction('tasks-card', 'readonly');
+          tasksCard.tasksCardTransaction = tasksCard.transaction.objectStore("tasks-card").getAll();
+
+          tasksCard.transaction.oncomplete = function () {
+
+            // console.log( tasksCard.tasksCardTransaction.result );
+            tasksCard.tasksCardJSON = JSON.stringify(tasksCard.tasksCardTransaction.result);
+            // console.log(tasksCard.tasksCardJSON);
+
+            fetch(tasksCard.state.serverURL, {
+              method: 'POST',
+              body: { "add_tasks": tasksCard.tasksCardJSON },
+            }).then((response) => {
+              // console.log( response );
+              return response.json();
+            }).then(json => console.log(json));
+
+            // axios.post(tasksCard.state.serverURL, {
+            //   "add_tasks": tasksCard.tasksCardJSON,
+            // })
+            // .then(function (response) {
+            //   console.log(response);
+            // })
+            // .catch(function (error) {
+            //   console.log(error);
+            // });
+
+          }.bind(tasksCard);
+        }
+    },/* uploadTasksToServer() */
+    componentDidMount: () => {
+      const openedIndexedDB = indexedDB.open('tasks', 1);
+
+      openedIndexedDB.onupgradeneeded = function () {
+        console.log('upgradeneeded');
+        // срабатывает, если на клиенте нет базы данных
+        // ...выполнить инициализацию...
+        this.idb = openedIndexedDB.result;
+
+        if (!this.idb.objectStoreNames.contains('tasks-card')) { // если хранилище "tasks-card" не существует
+          this.idb.createObjectStore('tasks-card', {// создаем хранилище
+            keyPath: 'key',//вместо этого можно использовать такой подход: const request = tasksCard.add(task, task.id); ниже
+            // autoIncrement: true,//вместо этого можно использовать такой подход: const request = tasksCard.add(task, task.id); ниже
+          });
+        }
+      }
+
+      openedIndexedDB.onerror = function () {
+        console.error("error", openedIndexedDB.error);
+      };
+
+      openedIndexedDB.onsuccess = function () {
+        console.log('openedIndexedDB success');
+        this.idb = openedIndexedDB.result;
+        console.log('version idb: ' + this.idb.version);
+
+        this.idb.onversionchange = function () {
+          this.idb.close();
+          alert("База данных устарела, пожалуйста, перезагрузите страницу.")
+        };
+
         this.transaction = this.idb.transaction('tasks-card', 'readonly');
-        this.tasksCardTransaction = this.transaction.objectStore("tasks-card").getAll();
+        let tasksCardTransaction = this.transaction.objectStore("tasks-card");
+        this.allTasksFromDB = tasksCardTransaction.getAll();
 
         this.transaction.oncomplete = function () {
+          console.log("Транзакция idb allTasks result выполнена: ");
+          console.log(this.allTasksFromDB.result);
 
-          // console.log( this.tasksCardTransaction.result );
-          this.tasksCardJSON = JSON.stringify(this.tasksCardTransaction.result);
-          // console.log(this.tasksCardJSON);
-
-          fetch(this.state.serverURL, {
-            method: 'POST',
-            body: { "add_tasks": this.tasksCardJSON },
-          }).then((response) => {
-            // console.log( response );
-            return response.json();
-          }).then(json => console.log(json));
-
-          // axios.post(this.state.serverURL, {
-          //   "add_tasks": this.tasksCardJSON,
-          // })
-          // .then(function (response) {
-          //   console.log(response);
-          // })
-          // .catch(function (error) {
-          //   console.log(error);
-          // });
-
-        }.bind(this);
-      },/* uploadTasksToServer() */
-      componentDidMount: () => {
-        const openedIndexedDB = indexedDB.open('tasks', 1);
-
-        openedIndexedDB.onupgradeneeded = function () {
-          console.log('upgradeneeded');
-          // срабатывает, если на клиенте нет базы данных
-          // ...выполнить инициализацию...
-          this.idb = openedIndexedDB.result;
-
-          if (!this.idb.objectStoreNames.contains('tasks-card')) { // если хранилище "tasks-card" не существует
-            this.idb.createObjectStore('tasks-card', {// создаем хранилище
-              keyPath: 'key',//вместо этого можно использовать такой подход: const request = tasksCard.add(task, task.id); ниже
-              // autoIncrement: true,//вместо этого можно использовать такой подход: const request = tasksCard.add(task, task.id); ниже
-            });
-          }
-        }
-
-        openedIndexedDB.onerror = function () {
-          console.error("error", openedIndexedDB.error);
-        };
-
-        openedIndexedDB.onsuccess = function () {
-          console.log('openedIndexedDB success');
-          this.idb = openedIndexedDB.result;
-          console.log('version idb: ' + this.idb.version);
-
-          this.idb.onversionchange = function () {
-            this.idb.close();
-            alert("База данных устарела, пожалуйста, перезагрузите страницу.")
-          };
-
-          this.transaction = this.idb.transaction('tasks-card', 'readonly');
-          let tasksCardTransaction = this.transaction.objectStore("tasks-card");
-          this.allTasksFromDB = tasksCardTransaction.getAll();
-
-          this.transaction.oncomplete = function () {
-            console.log("Транзакция idb allTasks result выполнена: ");
-            console.log(this.allTasksFromDB.result);
-
-            if (this.allTasksFromDB.result.length === 0) {
-              axios.get(this.state.serverURL, {
-                params: {
-                  get_db: '1',//version db
-                }
-              }).then(function (response) {
-                let allTasksFromServer = response.data;
-                console.log('JSON allTasksFromServer: ');
-                console.log(allTasksFromServer);
-                // console.log('JSON.parse allTasksFromServer: ');console.log(JSON.parse(allTasksFromServer));
-
-                this.transaction = this.idb.transaction('tasks-card', 'readwrite');
-                this.tasksCardTransaction = this.transaction.objectStore("tasks-card");
-
-                allTasksFromServer.map((task) => {
-                  console.log('task from server: ');
-                  console.log(task);
-                  let request = this.tasksCardTransaction.put(task);
-                  console.log(request);
-                });
-
-              }.bind(this))
-                .catch(function (error) {
-                  console.log(error);
-                })
-                .then(function () {
-                  // always executed
-                });
-            }
-
-            for (let item of this.allTasksFromDB.result) {
-              if (item.deleted) {
-                this.setState((state, props) => ({
-                  maxTasksKey: item.key,
-                }));
-                continue;
+          if (this.allTasksFromDB.result.length === 0) {
+            axios.get(this.state.serverURL, {
+              params: {
+                get_db: '1',//version db
               }
+            }).then(function (response) {
+              let allTasksFromServer = response.data;
+              console.log('JSON allTasksFromServer: ');
+              console.log(allTasksFromServer);
+              // console.log('JSON.parse allTasksFromServer: ');console.log(JSON.parse(allTasksFromServer));
 
-              let newTaskJSX = (
-                <TasksItem
-                  content={item.content}
-                  data-key={item.key}
-                  id={'i-' + item.key}
-                  className='tasks-list__tasks-item'
-                  key={item.key}
-                  tasksItemSave={this.tasksItemSave}
-                  tasksItemDelete={this.tasksItemDelete}
-                  data-created={item.created}
-                />
-              );
+              this.transaction = this.idb.transaction('tasks-card', 'readwrite');
+              this.tasksCardTransaction = this.transaction.objectStore("tasks-card");
 
+              allTasksFromServer.map((task) => {
+                console.log('task from server: ');
+                console.log(task);
+                let request = this.tasksCardTransaction.put(task);
+                console.log(request);
+              });
+
+            }.bind(this))
+              .catch(function (error) {
+                console.log(error);
+              })
+              .then(function () {
+                // always executed
+              });
+          }
+
+          for (let item of this.allTasksFromDB.result) {
+            if (item.deleted) {
               this.setState((state, props) => ({
-                tasksList: state.tasksList.concat(newTaskJSX),
                 maxTasksKey: item.key,
               }));
-              console.log('this.state.tasksList: ');
-              console.log(this.state.tasksList);
+              continue;
             }
-          }.bind(this);
-        }.bind(this);
 
-        openedIndexedDB.onblocked = function () {
-          // есть другое соединение к той же базе
-          // и оно не было закрыто после срабатывания на нём idb.onversionchange
-        };
-      },
+            let newTaskJSX = (
+              <TasksItem
+                content={item.content}
+                data-key={item.key}
+                id={'i-' + item.key}
+                className='tasks-list__tasks-item'
+                key={item.key}
+                tasksItemSave={this.tasksItemSave}
+                tasksItemDelete={this.tasksItemDelete}
+                data-created={item.created}
+              />
+            );
+
+            this.setState((state, props) => ({
+              tasksList: state.tasksList.concat(newTaskJSX),
+              maxTasksKey: item.key,
+            }));
+            console.log('this.state.tasksList: ');
+            console.log(this.state.tasksList);
+          }
+        }.bind(this);
+      }.bind(this);
+
+      openedIndexedDB.onblocked = function () {
+        // есть другое соединение к той же базе
+        // и оно не было закрыто после срабатывания на нём idb.onversionchange
+      };
     },
-  }
+  },
+}
 };
 
 export default store;
