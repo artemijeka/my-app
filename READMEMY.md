@@ -13,7 +13,7 @@ TODO
 
 Docs остановился тут:
   react js: 
-    https://ru.reactjs.org/docs/accessibility.html
+    https://ru.reactjs.org/docs/context.html#contextconsumer
 
   react-router-dom
     https://github.com/remix-run/react-router/blob/main/docs/getting-started/installation.md
@@ -23,12 +23,9 @@ Docs остановился тут:
 
   axios 
     https://www.npmjs.com/package/axios#installing
+
   может понадобится fetch 
     https://learn.javascript.ru/fetch
-
-  пропустил пока что:
-    https://ru.reactjs.org/docs/context.html
-    https://ru.reactjs.org/docs/error-boundaries.html
   
 Теория
   Состояние === интерактивность
@@ -44,7 +41,6 @@ Docs остановился тут:
           В итоге, состоянием являются:
             Поисковый запрос, введённый пользователем
             Значение чекбокса
-              Моё: то есть то что
   
 Debug 
   https://github.com/facebook/react/tree/main/packages/react-devtools

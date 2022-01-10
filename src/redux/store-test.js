@@ -18,6 +18,7 @@ const store = {
       pomodoroMinutes: 30,
       audioPlayer: new Audio('./audio/noise-pomodoro.mp3'),
       audioPlayerStopPomodoro: new Audio('./audio/end-pomodoro.mp3'),
+
       getButtonName: (pomodoro) => {
         // debugger;
         return pomodoro.buttonName;
@@ -34,10 +35,10 @@ const store = {
         let pomodoroSeconds = Number(localStorage.getItem('pomodoroSeconds'));
         // Если в loacalStorage нет незаконченного помодоро, то берем его из <select>
         if (pomodoroMinutes === 0 && pomodoroSeconds === 0) {
-          pomodoro.pomodoroTimer = [Number(pomodoro.pomodoroMinutes.value), 0];
-          pomodoro.pomodoroCurrentTimer = Number(pomodoro.pomodoroMinutes.value);
+          pomodoro.pomodoroTimer = [Number(pomodoro.pomodoroMinutes), 0];
+          pomodoro.pomodoroCurrentTimer = Number(pomodoro.pomodoroMinutes);
 
-          localStorage.setItem('pomodoroCurrentTimer', Number(pomodoro.pomodoroMinutes.value));
+          localStorage.setItem('pomodoroCurrentTimer', Number(pomodoro.pomodoroMinutes));
         }
 
         // Защита от повторного нажатия на таймер помодоро
